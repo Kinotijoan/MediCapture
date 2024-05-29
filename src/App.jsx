@@ -5,6 +5,7 @@ import './App.css'
 import Gallery from './componets/Gallery/Gallery'
 import Login from './componets/Auth/Login'
 import { Route, Routes } from 'react-router-dom'
+import UploadImage from './componets/Gallery/UploadImage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -12,8 +13,9 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Gallery />} />
+        <Route path="/" element={<Gallery/>} />
         <Route path="/login" element={<Login />} />
+        <Route path='/upload'element={<UploadImage/>} />
       </Routes>
     </>
   )
