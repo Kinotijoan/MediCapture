@@ -5,7 +5,6 @@ import Display from './Display'
 const Gallery = () => {
   return (
     <>
-    
       <h2>DailyDumps</h2>
       <div className="gallery-container">
         <UploadImage />
