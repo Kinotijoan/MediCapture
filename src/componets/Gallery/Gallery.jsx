@@ -13,6 +13,7 @@ import {
 import { storage } from "../../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 } from "uuid";
+import Header from "../Header";
 
 const Gallery = () => {
   const [image, setImage] = React.useState();
@@ -149,7 +150,8 @@ const Gallery = () => {
 
   return (
     <>
-      <h2>DailyDumps</h2>
+      {/* <Header/> */}
+      <h1>DailyDumps</h1>
       <div className="gallery-container">
         <UploadImage
           handleImageChange={handleImageChange}
