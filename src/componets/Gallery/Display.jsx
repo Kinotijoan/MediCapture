@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import { Fade } from "react-awesome-reveal";
-import { Trash2, Share2, Star  } from "lucide-react";
-import {
-  getDatabase,
-  ref as dbRef,
-  get,
-  remove,
-} from "firebase/database";
+import { Trash2, Share2, Star } from "lucide-react";
+import { getDatabase, ref as dbRef, get, remove } from "firebase/database";
 
-
-const Display = ({ images, handleDelete }) => {
+const Display = ({ images, handleDelete, handleFavorite }) => {
   const db = getDatabase();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImageUrl, setSelectedImageUrl] = useState(null)
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
   const handleImageClick = (image, index) => {
     setSelectedImage(image);
@@ -25,12 +19,16 @@ const Display = ({ images, handleDelete }) => {
     setSelectedImage(null); // Clear selected image on close
   };
 
- const handleDeleteClick = (e,imgUrl) => {
-   e.stopPropagation();
-   handleDelete(imgUrl)
-  //  setText(e.target.value.toString().trim());
- };
+  const handleDeleteClick = (e, imgUrl) => {
+    e.stopPropagation();
+    handleDelete(imgUrl);
+    //  setText(e.target.value.toString().trim());
+  };
 
+  const handleFavoriteClick = (e, imgUrl) => {
+    e.stopPropagation();
+    handleFavorite(imgUrl);
+  };
 
   return (
     <div className="image-display">
@@ -70,7 +68,11 @@ const Display = ({ images, handleDelete }) => {
               <div>
                 <Share2 />
               </div>
-              <div>
+              <div
+                onClick={(event) => {
+                  handleFavoriteClick(event, image.imageUrl);
+                }}
+              >
                 <Star />
               </div>
             </div>
@@ -110,4 +112,3 @@ const Display = ({ images, handleDelete }) => {
 };
 
 export default Display;
- 
