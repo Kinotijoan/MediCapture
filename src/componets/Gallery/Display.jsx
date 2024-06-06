@@ -65,9 +65,9 @@ const Display = ({ images, handleDelete, handleFavorite }) => {
               >
                 <Trash2 />
               </div>
-              <div>
+              {/* <div>
                 <Share2 />
-              </div>
+              </div> */}
               <div
                 onClick={(event) => {
                   handleFavoriteClick(event, image.imageUrl);

@@ -13,7 +13,10 @@ import {
 import { storage } from "../../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { v4 } from "uuid";
-import { Home, Star, Eye } from "lucide-react";
+import { Home, Star, Eye, FileX } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
+import LogoutButton from "../Auth/LogoutButton";
+import Profile from "../Auth/Profile";
 // import Header from "../Header";
 
 const Gallery = () => {
@@ -21,6 +24,7 @@ const Gallery = () => {
   const [text, setText] = React.useState();
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user, isAuthenticated } = useAuth0();
 
   const db = getDatabase();
 
@@ -41,6 +45,7 @@ const Gallery = () => {
     return size[Math.floor(Math.random() * size.length)];
   };
 
+  const userId = user?.sub;
   const uploadImage = async (e) => {
     e.preventDefault();
 
@@ -58,18 +63,21 @@ const Gallery = () => {
 
     try {
       // Upload the image to Firebase Storage
-      const imageRef = ref(storage, `images/${file.name + v4()}`); // Create image reference with UUID
+      const imageRef = ref(storage, `images/${userId}/${file.name + v4()}`); // Create image reference with UUID
       await uploadBytes(imageRef, file);
 
       // Get the download URL after successful upload
       const url = await getDownloadURL(imageRef);
 
       // Save image data to Firebase Realtime Database
-      await set(dbRef(db, "images/" + file.name.replace(/[.]?/gm, "") + v4()), {
-        imageUrl: url,
-        text: text,
-        size: randomSizeClass(),
-      });
+      await set(
+        dbRef(db, `images/${userId}/` + file.name.replace(/[.]?/gm, "") + v4()),
+        {
+          imageUrl: url,
+          text: text,
+          size: randomSizeClass(),
+        }
+      );
 
       console.log("Image uploaded and saved successfully!");
       setIsLoading(false); // Clear loading state on success
@@ -85,9 +93,10 @@ const Gallery = () => {
     }
   };
   const [images, setImages] = useState([]);
-  const getImages = () => {
-    const firebaseRef = dbRef(db, "images/");
-    onValue(
+  const getImages = async () => {
+    const firebaseRef = dbRef(db, `images/${userId}/`);
+    // console.log(userId)
+    await onValue(
       firebaseRef,
       (snapshot) => {
         if (snapshot.exists()) {
@@ -121,7 +130,7 @@ const Gallery = () => {
   const handleDelete = async (imgUrl) => {
     console.log("I am deleting");
     console.log(imgUrl);
-    const firebaseRef = dbRef(db, "images/"); // Reference to the images node
+    const firebaseRef = dbRef(db, `images/${userId}/`); // Reference to the images node
     console.log(firebaseRef);
 
     try {
@@ -133,7 +142,7 @@ const Gallery = () => {
         for (const key in data) {
           if (data[key].imageUrl === imgUrl) {
             // Matching image URL found, delete the data
-            await remove(dbRef(db, `images/${key}`));
+            await remove(dbRef(db, `images/${userId}/${key}`));
             //  await deleteDoc(doc(db, `images/${imgUrl}`))
             console.log("Image deleted successfully!");
             return; // Exit the function after successful deletion
@@ -151,7 +160,7 @@ const Gallery = () => {
   const handleFavorite = async (imgUrl) => {
     console.log("I am favoriting");
     console.log(imgUrl);
-    const firebaseRef = dbRef(db, "images/"); // Reference to the images node
+    const firebaseRef = dbRef(db, `images/${userId}/`); // Reference to the images node
     console.log(firebaseRef);
 
     try {
@@ -164,14 +173,14 @@ const Gallery = () => {
           if (data[key].imageUrl === imgUrl) {
             // Matching image URL found, transfer data to the favorites node?
             // Transfer all information the name should be same as the one that was aved to the database
-             await set(
-               dbRef(db, "favorites/" + key.replace(/[.]?/gm, "")),
-               {
-                 imageUrl: data[key].imageUrl,
-                 text: data[key].text,
-                 size: data[key].size,
-               }
-             );
+            await set(
+              dbRef(db, `favorites/${userId}/` + key.replace(/[.]?/gm, "")),
+              {
+                imageUrl: data[key].imageUrl,
+                text: data[key].text,
+                size: data[key].size,
+              }
+            );
 
             console.log("Image added to favoriites successfully!");
             return; // Exit the function after successful deletion
@@ -184,7 +193,7 @@ const Gallery = () => {
   };
 
   const getFavorites = () => {
-    const firebaseRef = dbRef(db, "favorites/");
+    const firebaseRef = dbRef(db, `favorites/${userId}/`);
     onValue(
       firebaseRef,
       (snapshot) => {
@@ -215,30 +224,67 @@ const Gallery = () => {
   };
 
   return (
-    <>
+    <div>
       {/* <Header/> */}
-      <h1>DailyDumps</h1>
+      <h1>MediCapture</h1>
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          backgroundColor: "gray",
-          color: "purple",
           justifyContent: "center",
-          justifyContent: "space-evenly",
-          fontSize: "",
-          borderRadius: "20px",
-          width: "10%",
-          height: "5%",
           alignItems: "center",
-          alignContent: "flex-end",
-          float: "right",
-          marginRight: "3rem",
+          justifyContent: "space-between",
         }}
       >
-        <Home onClick={getAllClick} size={32} />
-        <Star onClick={favoriteClick} size={32} />
-        <Eye size={32} />
+        <div style={{ marginLeft: "100px" }}>
+          <Profile />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            color: "purple",
+            justifyContent: "center",
+            justifyContent: "space-evenly",
+            fontSize: "",
+            borderRadius: "20px",
+            width: "15%",
+            height: "5%",
+            alignItems: "center",
+            alignContent: "flex-end",
+            float: "right",
+            marginRight: "3rem",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Home onClick={getAllClick} size={32} />
+            <p style={{ marginTop: "2xl" }}>Home</p>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Star
+              style={{ textAlign: "center" }}
+              onClick={favoriteClick}
+              size={32}
+            />
+            <p>Favourite</p>
+          </div>
+          {/* <Eye size={32} /> */}
+          <div>
+            <LogoutButton />
+          </div>
+        </div>
       </div>
       <div className="gallery-container">
         <UploadImage
@@ -249,9 +295,14 @@ const Gallery = () => {
           isLoading={isLoading}
           handleCancel={handleCancel}
         />
-        <Display images={images} handleDelete={handleDelete} handleFavorite={handleFavorite} getFavorites={getFavorites}/>
+        <Display
+          images={images}
+          handleDelete={handleDelete}
+          handleFavorite={handleFavorite}
+          getFavorites={getFavorites}
+        />
       </div>
-    </>
+    </div>
   );
 };
 export default Gallery;
